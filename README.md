@@ -62,6 +62,12 @@ The advantages of this project over the Ubuntu installer are:
 Start the live CD of a supported Linux distribution, then open a terminal and execute:
 
 ```sh
+gsettings set org.gnome.desktop.media-handling automount false
+gsettings set org.gnome.desktop.media-handling automount-open false
+```
+
+
+```sh
 GET https://git.io/JEw00 | sudo bash
 ```
 
