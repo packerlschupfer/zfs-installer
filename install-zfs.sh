@@ -115,7 +115,7 @@ USERDATA/%P                    mountpoint=/home/%P canmount=on com.ubuntu.zsys:b
 '
 c_zfs_mount_dir=/mnt
 c_installed_os_mount_dir=/target
-declare -A c_supported_linux_distributions=([Debian]="10 11" [Ubuntu]="18.04 20.04 22.04" [UbuntuServer]="18.04 20.04 22.04" [LinuxMint]="19.1 19.2 19.3" [Linuxmint]="20 20.1" [elementary]=5.1)
+declare -A c_supported_linux_distributions=([Debian]="10 11 12" [Ubuntu]="18.04 20.04 22.04" [UbuntuServer]="18.04 20.04 22.04" [LinuxMint]="19.1 19.2 19.3" [Linuxmint]="20 20.1" [elementary]=5.1)
 c_temporary_volume_size=12  # gigabytes; large enough - Debian, for example, takes ~8 GiB.
 c_passphrase_named_pipe=$(dirname "$(mktemp)")/zfs-installer.pp.fifo
 c_dns=8.8.8.8
@@ -480,21 +480,21 @@ In order to stop the procedure, hit Esc twice during dialogs (excluding yes/no o
 }
 
 function check_system_memory {
-    local system_memory
-    system_memory=$(free -m | perl -lane 'print @F[1] if $. == 2')
+  local system_memory
+  system_memory=$(free -m | perl -lane 'print @F[1] if $. == 2')
 
-    if [[ $system_memory -lt $c_memory_warning_limit && -z ${ZFS_NO_INFO_MESSAGES:-} ]]; then
-      # A workaround for these cases is to use the swap generate, but this can potentially cause troubles
-      # (severe compilation slowdowns) if a user tries to compensate too little memory with a large swapfile.
-      #
-      local dialog_message='WARNING! In some cases, the ZFS modules require compilation.
+  if [[ $system_memory -lt $c_memory_warning_limit && -z ${ZFS_NO_INFO_MESSAGES:-} ]]; then
+    # A workaround for these cases is to use the swap generate, but this can potentially cause troubles
+    # (severe compilation slowdowns) if a user tries to compensate too little memory with a large swapfile.
+    #
+    local dialog_message='WARNING! In some cases, the ZFS modules require compilation.
 
 On systems with relatively little RAM and many hardware threads, the procedure may crash during the compilation (e.g. 3 GB/16 threads).
 
 In such cases, the module building may fail abruptly, either without visible errors (leaving "process killed" messages in the syslog), or with package installation errors (leaving odd errors in the module'\''s `make.log`).'
 
-      whiptail --msgbox "$dialog_message" 30 100
-    fi
+    whiptail --msgbox "$dialog_message" 30 100
+  fi
 }
 
 function save_disks_log {
@@ -961,11 +961,10 @@ function install_host_zfs_packages_Debian {
   if [[ ${ZFS_SKIP_LIVE_ZFS_MODULE_INSTALL:-} != "1" ]]; then
     echo "zfs-dkms zfs-dkms/note-incompatible-licenses note true" | debconf-set-selections
 
-    echo "deb http://deb.debian.org/debian buster contrib" >> /etc/apt/sources.list
-    echo "deb http://deb.debian.org/debian buster-backports main contrib" >> /etc/apt/sources.list
+    echo "deb http://deb.debian.org/debian bookworm contrib" >> /etc/apt/sources.list
     apt update
 
-    apt install --yes -t buster-backports zfs-dkms
+    apt install --yes zfs-dkms
 
     modprobe zfs
   fi
@@ -1415,17 +1414,17 @@ function install_jail_zfs_packages {
 }
 
 function install_jail_zfs_packages_Debian {
-  chroot_execute 'echo "deb http://deb.debian.org/debian buster main contrib"     >> /etc/apt/sources.list'
-  chroot_execute 'echo "deb-src http://deb.debian.org/debian buster main contrib" >> /etc/apt/sources.list'
+  chroot_execute 'echo "deb http://deb.debian.org/debian bookworm main contrib"     >> /etc/apt/sources.list'
+  chroot_execute 'echo "deb-src http://deb.debian.org/debian bookworm main contrib" >> /etc/apt/sources.list'
 
-  chroot_execute 'echo "deb http://deb.debian.org/debian buster-backports main contrib"     >> /etc/apt/sources.list.d/buster-backports.list'
-  chroot_execute 'echo "deb-src http://deb.debian.org/debian buster-backports main contrib" >> /etc/apt/sources.list.d/buster-backports.list'
+#  chroot_execute 'echo "deb http://deb.debian.org/debian bookworm-backports main contrib"     >> /etc/apt/sources.list.d/bookworm-backports.list'
+#  chroot_execute 'echo "deb-src http://deb.debian.org/debian bookworm-backports main contrib" >> /etc/apt/sources.list.d/bookworm-backports.list'
 
-  chroot_execute 'cat > /etc/apt/preferences.d/90_zfs <<APT
-Package: libnvpair1linux libuutil1linux libzfs2linux libzpool2linux zfs-dkms zfs-initramfs zfs-test zfsutils-linux zfsutils-linux-dev zfs-zed
-Pin: release n=buster-backports
-Pin-Priority: 990
-APT'
+#  chroot_execute 'cat > /etc/apt/preferences.d/90_zfs <<APT
+#Package: libnvpair1linux libuutil1linux libzfs2linux libzpool2linux zfs-dkms zfs-initramfs zfs-test zfsutils-linux zfsutils-linux-dev zfs-zed
+#Pin: release n=bookworm-backports
+#Pin-Priority: 990
+#APT'
 
   chroot_execute "apt update"
 
